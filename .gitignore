@@ -1,0 +1,22 @@
+# ===== env =====
+.env
+.env.*
+
+# ===== Go =====
+/bin/
+/build/
+/dist/
+*.exe
+*.out
+/tmp/
+*.log
+
+# ===== Docker / DB =====
+db-data/
+postgres-data/
+docker-data/
+
+# ===== Editor / OS =====
+.vscode/
+.idea/
+.DS_Store
