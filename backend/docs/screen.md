@@ -10,7 +10,18 @@
 - 対象: 一般
 - 内容:
   - サイト紹介
-  - 代表作品
+  - 代表作品(3件)
+- 取得API:
+  - GET /api/works?tag=representative&limit=3
+  - GET /api/works/work_id
+- UI:
+  - /代表作遷移ボタン
+    - 取得API:
+      - GET /api/works/work_id
+  - /works遷移ボタン
+    - 取得API:
+      - api/works
+  - /artist遷移ボタン
 
 ---
 
@@ -29,7 +40,7 @@
 
 ### 作品詳細
 
-- URL: /works/:id
+- URL: /works/[id]
 - 対象: 一般
 - 内容:
   - 作品画像

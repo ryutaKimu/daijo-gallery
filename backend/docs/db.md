@@ -58,10 +58,10 @@ Constraints:
 
 | 列名 | 型 | 制約 | 説明
 |------|----|-----|----|
-| works_id | bigInt | NOT NULL | 作品外部キー
+| work_id | bigInt | NOT NULL | 作品外部キー
 | tag_id | bigInt | NOT NULL | タグ外部キー
 
 Constraints:
-- PRIMARY KEY (works_id, tag_id)
-- FOREIGN KEY (works_id) REFERENCES works(id)
+- PRIMARY KEY (work_id, tag_id)
+- FOREIGN KEY (work_id) REFERENCES works(id)
 - FOREIGN KEY (tag_id) REFERENCES tags(id)
