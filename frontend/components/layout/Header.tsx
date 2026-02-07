@@ -1,4 +1,4 @@
-import Link from "next/link"
+import Link from 'next/link'
 
 export default function Header() {
   const linkClassName = `
@@ -6,7 +6,7 @@ export default function Header() {
     relative
     pb-1
     transition-colors
-    text-[var(--color-text)]
+    text-(--color-text)
     hover:text-[var(--color-main)]
 
     after:absolute
@@ -22,7 +22,7 @@ export default function Header() {
   return (
     <header>
       <nav className="mx-auto max-w-7xl flex items-center justify-end px-10 py-5">
-        <ul className="flex items-center gap-10 font-medium text-[var(--color-text)]">
+        <ul className="flex items-center gap-10 font-medium text-(--color-text)">
           {/* 作品一覧 */}
           <li>
             <Link href="/works" className={linkClassName}>

@@ -13,7 +13,6 @@
   --color-accent: #6B7B6A;
   /* 深緑 */
   --color-text: #2f4f3a;
-  /* ダークグレー */
 
   --btn-radius: 8px;
   --card-radius: 8px;
@@ -25,18 +24,8 @@
 ============================== */
 html {
   font-family: 'Noto Serif JP', '游明朝', serif;
-  color: var(--color-text);
   background-color: var(--color-bg);
   line-height: 1.6;
-}
-
-h1,
-h3,
-h4,
-h5,
-h6 {
-  font-family: 'Playfair Display', 'Cinzel', serif;
-  color: var(--color-main);
 }
 
 
@@ -79,7 +68,6 @@ main {
   main {
     padding: 1rem;
   }
-
 }
 
 @media (max-width: 480px) {
