@@ -57,7 +57,7 @@ export default async function WorksList() {
 
           {/* タイトル */}
           <div className="p-4 text-center">
-            <p className="text-sm text-(--color-text)">{work.title}</p>
+            <p className="text-2xl text-(--color-main)">{work.title}</p>
             <p className="text-sm text-(--color-text) mt-4">{work.year}年</p>
           </div>
         </div>
