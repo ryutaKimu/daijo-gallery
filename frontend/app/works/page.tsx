@@ -22,7 +22,7 @@ export default async function Works({
       </section>
 
       <section className="mt-8 md:mt-12 bg-(--color-bg) pb-16 md:pb-24">
-        <WorkList featuredOnly={false} page={page} perPage={5} />
+        <WorkList featuredOnly={false} page={page} perPage={6} />
       </section>
     </>
   )

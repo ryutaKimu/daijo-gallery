@@ -81,6 +81,60 @@ async function getDummyWorks(): Promise<Work[]> {
       year: '2025',
       imageUrl: 'https://picsum.photos/800/1000?random=11',
     },
+    {
+      id: 12,
+      title: '犬は共産党',
+      year: '2025',
+      imageUrl: 'https://picsum.photos/800/1000?random=12',
+    },
+    {
+      id: 13,
+      title: '猫は神の子',
+      year: '2025',
+      imageUrl: 'https://picsum.photos/800/1000?random=13',
+    },
+    {
+      id: 14,
+      title: '犬殺害現場',
+      year: '2025',
+      imageUrl: 'https://picsum.photos/800/1000?random=14',
+    },
+    {
+      id: 15,
+      title: '犬殺害現場2',
+      year: '2025',
+      imageUrl: 'https://picsum.photos/800/1000?random=15',
+    },
+    {
+      id: 16,
+      title: '犬殺害現場3',
+      year: '2025',
+      imageUrl: 'https://picsum.photos/800/1000?random=16',
+    },
+    {
+      id: 17,
+      title: '犬殺害現場4',
+      year: '2025',
+      imageUrl: 'https://picsum.photos/800/1000?random=17',
+    },
+    {
+      id: 18,
+      title: '犬殺害現場5',
+      year: '2025',
+      imageUrl: 'https://picsum.photos/800/1000?random=18',
+    },
+    {
+      id: 19,
+      title: '犬殺害現場6',
+      year: '2025',
+      imageUrl: 'https://picsum.photos/800/1000?random=19',
+    },
+    {
+      id: 20,
+      title: '犬殺害現場7',
+      year: '2025',
+      imageUrl: 'https://picsum.photos/800/1000?random=20',
+    },
   ]
 }
 
@@ -110,10 +164,10 @@ export default async function WorkList({
           className="
           grid 
           grid-cols-1 
-          sm:grid-cols-2 
-          lg:grid-cols-3 
-          xl:grid-cols-4 
-          gap-8 sm:gap-10 lg:gap-12
+          md:grid-cols-2 
+          lg:grid-cols-3
+          xl:grid-cols-3
+          gap-5 sm:gap-10 lg:gap-20
         "
         >
           {currentWorks.map((work) => (
@@ -146,7 +200,7 @@ export default async function WorkList({
               </div>
 
               <div className="p-6 text-center">
-                <p className="text-2xl sm:text-3xl font-serif text-(--color-main) leading-tight mb-3">
+                <p className="text-2xl sm:text-2xl font-serif text-(--color-main) leading-tight mb-3">
                   {work.title}
                 </p>
                 <p className="text-base sm:text-lg text-(--color-text) opacity-90">{work.year}年</p>
