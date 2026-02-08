@@ -24,7 +24,7 @@ export default function Pagination({ currentPage, totalPages }: PaginationProps)
         disabled={currentPage <= 1}
         onClick={() => router.push(createPageURL(currentPage - 1))}
         className={`
-          px-6 py-3 rounded-lg font-medium transition
+          px-6 py-3 rounded-lg font-medium transition cursor-pointer
           ${
             currentPage <= 1
               ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
@@ -43,7 +43,7 @@ export default function Pagination({ currentPage, totalPages }: PaginationProps)
         disabled={currentPage >= totalPages}
         onClick={() => router.push(createPageURL(currentPage + 1))}
         className={`
-          px-6 py-3 rounded-lg font-medium transition
+          px-6 py-3 rounded-lg font-medium transition cursor-pointer
           ${
             currentPage >= totalPages
               ? 'bg-gray-200 text-gray-400 cursor-not-allowed'

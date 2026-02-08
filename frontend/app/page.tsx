@@ -64,10 +64,10 @@ export default function Home() {
           "
         >
           <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-medium text-(--color-main) tracking-wide">
-            山田 個展
+            山田 画集
           </h1>
 
-          <h2 className={subTitleClass}>人生の証人達</h2>
+          <h2 className={subTitleClass}>人生の証跡</h2>
           <Button href="/works" label="作品を見る" className="mt-8" />
         </div>
       </section>
@@ -92,7 +92,7 @@ export default function Home() {
           >
             代表作品
           </h1>
-          <p className="text-(--color-text) font-bold text-2xl ">絵は人生の映し絵</p>
+          <p className="text-(--color-text) font-bold text-2xl ">生き方が絵に映る。鮮明に、如実に、偽りなく。</p>
 
           <div className="mt-8">
             <WorksList featuredOnly={true} />

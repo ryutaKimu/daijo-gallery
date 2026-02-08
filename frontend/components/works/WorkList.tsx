@@ -182,6 +182,7 @@ export default async function WorkList({
                 transition-all duration-300
                 hover:shadow-2xl
                 hover:-translate-y-2
+                cursor-pointer
               "
             >
               <div className="relative aspect-4/5 overflow-hidden bg-gray-100">
