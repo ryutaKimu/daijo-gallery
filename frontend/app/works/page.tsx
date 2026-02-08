@@ -12,7 +12,7 @@ export default async function Works({
 
   return (
     <>
-      <section className="relative h-[40vh] min-h-[320px] w-full overflow-hidden bg-(--color-bg) flex flex-col justify-center items-center px-4">
+      <section className="relative h-[40vh] min-h-80 w-full overflow-hidden bg-(--color-bg) flex flex-col justify-center items-center px-4">
         <h1 className="text-5xl sm:text-6xl md:text-7xl font-medium text-(--color-main) tracking-wider text-center leading-tight">
           作品 一覧
         </h1>
