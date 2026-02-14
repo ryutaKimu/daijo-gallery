@@ -10,7 +10,7 @@ export type Database = {
           title: string
           description: string | null
           year: string | null
-          image_path: string
+          img_path: string
           created_at: string
           updated_at: string
         }

@@ -12,33 +12,84 @@ interface WorkListProps {
   tagId?: number
 }
 
+/** 代表作を示すタグID */
+const FEATURED_TAG_ID = 1
+/** トップページに表示する代表作の件数 */
+const FEATURED_LIMIT = 3
+
 type WorkRow = {
   id: number
   title: string
   year: string | null
-  image_path: string
+  img_path: string
   works_tags: { tag_id: number }[]
 }
 
-async function getWorks(): Promise<Work[]> {
-  const { data, error } = (await supabase
+async function getWorks({
+  featuredOnly,
+  page,
+  perPage,
+  query,
+  tagId,
+}: {
+  featuredOnly: boolean
+  page: number
+  perPage: number
+  query?: string
+  tagId?: number
+}): Promise<{ works: Work[]; totalPages: number }> {
+  // タグフィルタ: featuredOnly時は代表作タグ、それ以外はtagIdでフィルタ
+  let tagFilterIds: number[] | null = null
+  const filterTagId = featuredOnly ? FEATURED_TAG_ID : tagId
+  if (filterTagId) {
+    const { data: tagRows } = (await supabase
+      .from('works_tags')
+      .select('work_id')
+      .eq('tag_id', filterTagId)) as { data: { work_id: number }[] | null }
+    tagFilterIds = tagRows?.map((r) => r.work_id) ?? []
+  }
+
+  // 件数取得
+  let countQuery = supabase
+    .from('works')
+    .select('id', { count: 'exact', head: true })
+    .eq('status', true)
+  if (query) countQuery = countQuery.ilike('title', `%${query}%`)
+  if (tagFilterIds !== null) countQuery = countQuery.in('id', tagFilterIds)
+
+  const { count } = await countQuery
+
+  // データ取得（ページネーション込み）
+  const from = (page - 1) * perPage
+  const to = from + perPage - 1
+
+  let dataQuery = supabase
     .from('works')
     .select('id, title, year, img_path, works_tags(tag_id)')
     .eq('status', true)
-    .order('created_at', { ascending: false })) as { data: WorkRow[] | null; error: typeof Error | null }
+    .order('created_at', { ascending: false })
+  if (query) dataQuery = dataQuery.ilike('title', `%${query}%`)
+  if (tagFilterIds !== null) dataQuery = dataQuery.in('id', tagFilterIds)
+  dataQuery = dataQuery.range(from, to)
+
+  const { data, error } = (await dataQuery) as { data: WorkRow[] | null; error: typeof Error | null }
 
   if (error) {
     console.error('Supabase fetch error:', error)
-    return []
+    return { works: [], totalPages: 0 }
   }
 
-  return (data ?? []).map((work) => ({
+  const works = (data ?? []).map((work) => ({
     id: work.id,
     title: work.title,
     year: work.year ?? '',
-    imageUrl: supabase.storage.from('works').getPublicUrl(work.image_path).data.publicUrl,
+    imageUrl: supabase.storage.from('gallery-images').getPublicUrl(work.img_path).data.publicUrl,
     tags: work.works_tags.map((wt) => wt.tag_id),
   }))
+
+  const total = count ?? 0
+  const totalPages = Math.ceil(total / perPage)
+  return { works, totalPages }
 }
 
 export default async function WorkList({
@@ -48,34 +99,14 @@ export default async function WorkList({
   query,
   tagId,
 }: WorkListProps) {
-  const allWorks = await getWorks()
-
-  let filteredWorks: Work[]
-
-  if (featuredOnly) {
-    // トップページで表示する代表作は固定で3枚
-    filteredWorks = allWorks.filter((work) => work.tags?.includes(1)).slice(0, 3)
-  } else {
-    filteredWorks = allWorks
-
-    // テキスト検索フィルタ
-    if (query) {
-      filteredWorks = filteredWorks.filter((work) =>
-        work.title.toLowerCase().includes(query.toLowerCase())
-      )
-    }
-
-    // タグフィルタ
-    if (tagId) {
-      filteredWorks = filteredWorks.filter((work) => work.tags?.includes(tagId))
-    }
-  }
-
-  const total = filteredWorks.length
-  const totalPages = Math.ceil(total / perPage)
-  const start = (page - 1) * perPage
-  const end = start + perPage
-  const currentWorks = filteredWorks.slice(start, end)
+  const limit = featuredOnly ? FEATURED_LIMIT : perPage
+  const { works: currentWorks, totalPages } = await getWorks({
+    featuredOnly,
+    page: featuredOnly ? 1 : page,
+    perPage: limit,
+    query,
+    tagId,
+  })
 
   return (
     <div className="py-12 md:py-16">
