@@ -1,36 +1,48 @@
-# API設計
+# データ取得設計（Supabase）
 
 ## 基本方針
-- REST形式
-- JSON形式
-- Base: /api
-- Admin: /api/admin
-- Auth: JWT
+- Supabase クライアント（`@supabase/supabase-js`）を使用
+- Server Component からデータ取得
+- RLS（Row Level Security）で公開 / 管理者のアクセス制御
+- 画像は Supabase Storage から取得
+- DB にはファイルパスのみ保存し、表示時にフロントエンドで完全な URL を構築する
 
-## ステータスコード
-- 200 OK
-- 400 Bad Request
-- 401 Unauthorized
-- 403 Forbidden
-- 404 Not Found
-- 500 Internal Error
+---
 
-## 公開API
+## 画像URL構築
 
-### GET /api/works
+DB の `img_path` にはファイルパス（例: `works/1.jpg`）のみを保存する。
+フロントエンドで表示する際に `getPublicUrl()` で完全な URL を構築する。
 
-用途: 作品一覧取得
+```ts
+// ファイルパスから公開URLを構築
+const { data: { publicUrl } } = supabase.storage
+  .from('works')
+  .getPublicUrl(imgPath)
+```
 
-Query:
-- page: int
-- limit: int
-- q: string
-- tag: int (optional, multiple allowed)
-  Example: ?tag=1&tag=2
+---
 
-success Response:
-- data[]
-- meta(page, limit, total, total_pages)
+## 公開データ取得
+
+### 作品一覧取得
+
+用途: 作品一覧ページ
+
+```ts
+const { data, count } = await supabase
+  .from('works')
+  .select('id, title, year, img_path, tags:works_tags!inner(tag:tags(id, tag_name))', { count: 'exact' })
+  .eq('status', true)
+  .ilike('title', `%${query}%`)          // テキスト検索（任意）
+  .eq('works_tags.tag_id', tagId)        // タグフィルタ（任意、!inner で内部結合）
+  .range(offset, offset + limit - 1)
+  .order('year', { ascending: false })
+```
+
+※ タグフィルタを使わない場合は `!inner` を外し、`.eq('works_tags.tag_id', tagId)` を省略する。
+
+レスポンス例:
 ```json
 {
   "data": [
@@ -38,98 +50,192 @@ success Response:
       "id": 1,
       "title": "静寂の森",
       "year": 1985,
-      "image_url": "/images/works/1.jpg",
+      "img_path": "works/1.jpg",
       "tags": [
-        "風景",
-        "油彩"
+        { "tag": { "id": 1, "tag_name": "風景" } },
+        { "tag": { "id": 2, "tag_name": "油彩" } }
       ]
-    },
-    {
-      "id": 2,
-      "title": "夕暮れの港",
-      "year": 1992,
-      "tags": [
-        "水彩",
-        "メキシコ",
-        "作者お気に入り"
-      ],
-      "image_url": "/images/works/2.jpg"
     }
   ],
-  "meta": {
-    "page": 1,
-    "limit": 20,
-    "total": 82,
-    "total_pages": 5
-  }
-}
-```
-### GET /api/works/{id}
-
-用途: 作品詳細取得
-
-Response:
-- id
-- title
-- description
-- year
-- tags[]
-- image_url
----
-#### Error Responses
-
-##### 400 Bad Request
-- page or limit is invalid
-
-##### 500 Internal Server Error
-
-- database error
-
-/api/works?page=-1
-/api/works?limit=1000
-/api/works?page=2&tag="44"
-
-```json
-{
-  "error": "Bad Request",
-  "message": "page must be greater than 0",
-  "code": 400
+  "count": 82
 }
 ```
 
-```json
-{
-  "error": "Bad Request",
-  "message": "limit must be between 1 and 100",
-  "code": 400
-}
+### 作品詳細取得
+
+用途: 作品詳細ページ
+
+```ts
+const { data } = await supabase
+  .from('works')
+  .select('id, title, description, year, img_path, tags:works_tags(tag:tags(id, tag_name))')
+  .eq('id', id)
+  .eq('status', true)
+  .single()
 ```
 
-```json
-{
-  "error": "Bad Request",
-  "message": "tag must be integer",
-  "code": 400
-}
+### 代表作取得
 
+用途: トップページ（3件固定）
+
+```ts
+const { data } = await supabase
+  .from('works')
+  .select('id, title, year, img_path')
+  .eq('status', true)
+  .in('id', representativeIds)
+  .limit(3)
 ```
 
-Response 500
-```json
-{
-  "error": "Internal Server Error",
-  "message": "failed to fetch works",
-  "code": 500
-}
+### タグ一覧取得
+
+```ts
+const { data } = await supabase
+  .from('tags')
+  .select('id, tag_name')
+  .order('id')
 ```
+
 ---
 
-## 管理API
+## 管理者操作
 
-### POST /api/admin/login
+### 認証
 
-### POST /api/admin/works
+Supabase Auth を使用（メール / パスワード）
 
-### PUT /api/admin/works/{id}
+```ts
+// ログイン
+const { data, error } = await supabase.auth.signInWithPassword({
+  email,
+  password,
+})
 
-### DELETE /api/admin/works/{id}
+// ログアウト
+await supabase.auth.signOut()
+```
+
+### 作品登録
+
+```ts
+// 1. 画像を Storage にアップロード
+const { data: file, error: uploadError } = await supabase.storage
+  .from('works')
+  .upload(`${fileName}`, imageFile)
+
+if (uploadError || !file) {
+  throw new Error('画像のアップロードに失敗しました')
+}
+
+// 2. works テーブルに挿入（パスのみ保存）
+const { data, error } = await supabase
+  .from('works')
+  .insert({ title, description, year, img_path: file.path, status: true })
+  .select()
+  .single()
+
+// 3. DB 挿入失敗時は Storage の画像を削除（孤児ファイル防止）
+if (error) {
+  await supabase.storage.from('works').remove([file.path])
+  throw new Error('作品の登録に失敗しました')
+}
+```
+
+### 作品更新（テキスト情報のみ）
+
+```ts
+const { data } = await supabase
+  .from('works')
+  .update({ title, description, year })
+  .eq('id', id)
+  .select()
+  .single()
+```
+
+### 作品更新（画像変更あり）
+
+新画像アップロード → DB 更新 → 旧画像削除
+
+```ts
+// 1. 現在の画像パスを取得
+const { data: work } = await supabase
+  .from('works')
+  .select('img_path')
+  .eq('id', id)
+  .single()
+
+// 2. 新しい画像を Storage にアップロード
+const { data: file, error: uploadError } = await supabase.storage
+  .from('works')
+  .upload(`${newFileName}`, newImageFile)
+
+if (uploadError || !file) {
+  throw new Error('画像のアップロードに失敗しました')
+}
+
+// 3. DB を更新（パスのみ保存）
+const { data: updated, error } = await supabase
+  .from('works')
+  .update({ title, description, year, img_path: file.path })
+  .eq('id', id)
+  .select()
+  .single()
+
+// 4. DB 更新失敗時は新画像を削除（孤児ファイル防止）
+if (error) {
+  await supabase.storage.from('works').remove([file.path])
+  throw new Error('作品の更新に失敗しました')
+}
+
+// 5. DB 更新成功後、旧画像を Storage から削除
+if (work?.img_path) {
+  await supabase.storage.from('works').remove([work.img_path])
+}
+```
+
+### 作品削除
+
+Storage の画像も合わせて削除する。DB 削除を先に行い、成功後に Storage を削除する。
+これにより、DB 削除失敗時に画像だけ消えてしまう不整合を防ぐ。
+
+```ts
+// 1. 削除対象の作品から画像パスを取得
+const { data: work } = await supabase
+  .from('works')
+  .select('img_path')
+  .eq('id', id)
+  .single()
+
+// 2. works テーブルから削除（works_tags は CASCADE で自動削除）
+const { error } = await supabase.from('works').delete().eq('id', id)
+
+if (error) {
+  throw new Error('作品の削除に失敗しました')
+}
+
+// 3. DB 削除成功後、Storage から画像を削除
+if (work?.img_path) {
+  await supabase.storage.from('works').remove([work.img_path])
+}
+```
+
+---
+
+## エラーハンドリング
+
+Supabase クライアントはエラーを `error` オブジェクトで返す。
+
+```ts
+const { data, error } = await supabase.from('works').select()
+
+if (error) {
+  // error.message: エラー詳細
+  // error.code: PostgreSQL エラーコード
+  console.error(error.message)
+}
+```
+
+主なエラーケース:
+- データ未検出: `.single()` で該当なしの場合 `PGRST116`
+- 権限エラー: RLS ポリシー違反時 `42501`
+- バリデーション: NOT NULL 違反等 `23502`
