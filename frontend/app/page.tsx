@@ -1,5 +1,7 @@
+import { Suspense } from 'react'
 import { Button } from '@/components/ui/Button'
 import WorksList from '@/components/works/WorkList'
+import WorkListSkeleton from '@/components/works/WorkListSkeleton'
 import Image from 'next/image'
 
 export default function Home() {
@@ -45,6 +47,7 @@ export default function Home() {
           alt="山田大乗 個展 メインヴィジュアル"
           fill
           className="object-cover"
+          sizes="100vw"
           priority
         />
 
@@ -95,7 +98,9 @@ export default function Home() {
           <p className="text-(--color-text) font-bold text-2xl ">生き方が絵に映る。鮮明に、如実に、偽りなく。</p>
 
           <div className="mt-8">
-            <WorksList featuredOnly={true} />
+            <Suspense fallback={<WorkListSkeleton count={3} />}>
+              <WorksList featuredOnly={true} />
+            </Suspense>
           </div>
         </div>
       </section>

@@ -29,6 +29,7 @@ export default function Artist() {
                 className="object-cover transition-transform duration-700 hover:scale-105"
                 sizes="(max-width: 1024px) 100vw, 50vw"
                 quality={85}
+                priority
               />
               {/* オプション：薄いオーバーレイ */}
               <div className="absolute inset-0 bg-linear-to-t from-black/30 to-transparent pointer-events-none" />

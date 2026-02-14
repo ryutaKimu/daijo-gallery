@@ -6,8 +6,18 @@ import './globals.css'
 import Header from '@/components/layout/Header'
 import Footer from '@/components/layout/Footer'
 
-const notoSerif = Noto_Serif_JP({ variable: '--font-noto-serif', subsets: ['latin'] })
-const playfair = Playfair_Display({ variable: '--font-playfair', subsets: ['latin'] })
+const notoSerif = Noto_Serif_JP({
+  variable: '--font-noto-serif',
+  subsets: ['latin'],
+  display: 'swap',
+  preload: true,
+})
+const playfair = Playfair_Display({
+  variable: '--font-playfair',
+  subsets: ['latin'],
+  display: 'swap',
+  preload: true,
+})
 
 export const metadata: Metadata = {
   title: '山田個展',

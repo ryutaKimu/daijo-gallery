@@ -23,7 +23,7 @@
   2. フォント
 ============================== */
 html {
-  font-family: 'Noto Serif JP', '游明朝', serif;
+  font-family: var(--font-noto-serif), '游明朝', serif;
   background-color: var(--color-bg);
   line-height: 1.6;
 }

@@ -1,5 +1,7 @@
 // app/works/page.tsx
+import { Suspense } from 'react'
 import WorkList from '@/components/works/WorkList'
+import WorkListSkeleton from '@/components/works/WorkListSkeleton'
 import { DUMMY_TAGS } from '@/data/tags'
 import TextSearch from '@/components/ui/TextSearch'
 import TagSearch from '@/components/ui/TagSearch'
@@ -34,7 +36,9 @@ export default async function Works({
       </section>
 
       <section className="bg-(--color-bg) pb-16 md:pb-24">
-        <WorkList featuredOnly={false} page={page} perPage={6} query={query} tagId={tagId} />
+        <Suspense fallback={<WorkListSkeleton count={6} />}>
+          <WorkList featuredOnly={false} page={page} perPage={6} query={query} tagId={tagId} />
+        </Suspense>
       </section>
     </>
   )
