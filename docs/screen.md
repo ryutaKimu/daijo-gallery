@@ -42,9 +42,12 @@
 - URL: /works/[id]
 - 対象: 一般
 - 内容:
-  - 作品画像
+  - 作品メイン画像
   - タイトル
   - 制作年
+  - 説明文
+  - 工程画像（type: process）
+  - 関連画像（type: related）
   - prev / next ボタン
 - 使用データ:
   - works.id
@@ -52,6 +55,7 @@
   - works.description
   - works.year
   - works.img_path（Supabase Storage）
+  - work_images（work_id で紐づく画像一覧）
 
 ---
 

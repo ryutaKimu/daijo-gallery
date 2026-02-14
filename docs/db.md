@@ -25,6 +25,15 @@
   - works_id
   - tags_id
 ---
+- テーブル名: work_images
+- 利用用途: 作品の工程画像・関連画像を管理。
+- 必須データ
+  - id
+  - work_id
+  - type
+  - img_path
+  - sort_order
+---
 
 ## works
 
@@ -68,6 +77,24 @@ Constraints:
 
 ---
 
+## work_images
+
+| 列名 | 型 | 制約 | 説明
+|------|----|-----|----|
+| id | bigInt | PK | 主キー |
+| work_id | bigInt | NOT NULL | 作品外部キー |
+| type | text | NOT NULL | 画像種別（process / related） |
+| img_path | text | NOT NULL | Storage ファイルパス |
+| sort_order | int | NOT NULL DEFAULT 0 | 表示順 |
+| caption | text | NULL | 画像の説明（例: 下絵、着彩、展示風景） |
+| created_at | timestamptz | DEFAULT TIMESTAMP | 作成日時 |
+
+Constraints:
+- PRIMARY KEY (id)
+- FOREIGN KEY (work_id) REFERENCES works(id)
+
+---
+
 ## RLS（Row Level Security）ポリシー
 
 ### works
@@ -93,6 +120,14 @@ Constraints:
 |------|---------|------|
 | SELECT | 全件 | 全ユーザー |
 | INSERT / DELETE | 許可 | 認証済み管理者 |
+
+### work_images
+
+| 操作 | ポリシー | 対象 |
+|------|---------|------|
+| SELECT | work の status = true に紐づくもの | 一般ユーザー（anon） |
+| SELECT | 全件 | 認証済み管理者 |
+| INSERT / UPDATE / DELETE | 許可 | 認証済み管理者 |
 
 ---
 
