@@ -9,7 +9,7 @@
   - description
   - year
   - status
-  - img_url
+  - img_path
 ---
 - テーブル名: tags
 - 利用用途: 作品のタグを管理。
@@ -35,7 +35,7 @@
 | description | text | NULL | 作品説明 |
 | year | int | NULL | 作品年 |
 | status | boolean | NOT NULL | 公開状態 |
-| img_url | text | NOT NULL | 作品url |
+| img_path | text | NOT NULL | Storage ファイルパス |
 | created_at | timestamptz | DEFAULT TIMESTAMP | 作成日時 |
 | updated_at | timestamptz | DEFAULT TIMESTAMP | 更新日時 |
 

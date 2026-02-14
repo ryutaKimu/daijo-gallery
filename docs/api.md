@@ -134,6 +134,12 @@ const { data, error } = await supabase
   .select()
   .single()
 
+  // 118行目の後に追加
+if (!urlData?.publicUrl) {
+  await supabase.storage.from('works').remove([file.path]);
+  throw new Error('画像URLの取得に失敗しました');
+}
+
 // 3. DB 挿入失敗時は Storage の画像を削除（孤児ファイル防止）
 if (error) {
   await supabase.storage.from('works').remove([file.path])
@@ -154,7 +160,7 @@ const { data } = await supabase
 
 ### 作品更新（画像変更あり）
 
-新画像アップロード → DB 更新 → 旧画像削除の順で処理する。
+新画像アップロード → DB 更新 → 旧画像削除
 
 ```ts
 // 1. 現在の画像パスを取得
