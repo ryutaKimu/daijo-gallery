@@ -24,7 +24,7 @@ export default function Artist() {
             <div className="relative aspect-square md:aspect-4/5 rounded-2xl overflow-hidden shadow-2xl">
               <Image
                 src="https://picsum.photos/800/1000?random=50" // ← 実際は本物のポートレート画像に差し替え
-                alt="山田 某某 肖像"
+                alt="山田 大乗 肖像"
                 fill
                 className="object-cover transition-transform duration-700 hover:scale-105"
                 sizes="(max-width: 1024px) 100vw, 50vw"
