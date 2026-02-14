@@ -1,4 +1,9 @@
 @import "tailwindcss";
+
+@theme {
+  --font-serif: var(--font-noto-serif), '游明朝', serif;
+}
+
 /* ==============================
   1. カラーパレット
 ============================== */
