@@ -121,7 +121,7 @@ export default async function WorkList({
           md:grid-cols-2 
           lg:grid-cols-3
           xl:grid-cols-3
-          min-h-[900px]
+          min-h-[1200px]
           gap-5 sm:gap-10 lg:gap-20
         "
         >
