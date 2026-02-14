@@ -137,6 +137,7 @@ export default async function WorkList({
                 hover:shadow-2xl
                 hover:-translate-y-2
                 cursor-pointer
+                min-h-[400px]
               "
             >
               <div className="relative aspect-4/5 overflow-hidden bg-gray-100">

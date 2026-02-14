@@ -35,7 +35,7 @@ export default async function Works({
         </div>
       </section>
 
-      <section className="bg-(--color-bg) pb-16 md:pb-24">
+      <section className="bg-(--color-bg) pb-16 md:pb-24 min-h-[500px] md:min-h-[600px] lg:min-h-[800px]">
         <Suspense fallback={<WorkListSkeleton count={6} />}>
           <WorkList featuredOnly={false} page={page} perPage={6} query={query} tagId={tagId} />
         </Suspense>
