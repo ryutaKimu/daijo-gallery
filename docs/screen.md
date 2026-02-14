@@ -51,7 +51,7 @@
   - works.title
   - works.description
   - works.year
-  - works.img_url（Supabase Storage）
+  - works.img_path（Supabase Storage）
 
 ---
 
