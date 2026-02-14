@@ -1,36 +1,31 @@
-# API設計
+# データ取得設計（Supabase）
 
 ## 基本方針
-- REST形式
-- JSON形式
-- Base: /api
-- Admin: /api/admin
-- Auth: JWT
+- Supabase クライアント（`@supabase/supabase-js`）を使用
+- Server Component からデータ取得
+- RLS（Row Level Security）で公開 / 管理者のアクセス制御
+- 画像は Supabase Storage から取得
 
-## ステータスコード
-- 200 OK
-- 400 Bad Request
-- 401 Unauthorized
-- 403 Forbidden
-- 404 Not Found
-- 500 Internal Error
+---
 
-## 公開API
+## 公開データ取得
 
-### GET /api/works
+### 作品一覧取得
 
-用途: 作品一覧取得
+用途: 作品一覧ページ
 
-Query:
-- page: int
-- limit: int
-- q: string
-- tag: int (optional, multiple allowed)
-  Example: ?tag=1&tag=2
+```ts
+const { data, count } = await supabase
+  .from('works')
+  .select('id, title, year, img_url, tags:works_tags(tag:tags(id, tag_name))', { count: 'exact' })
+  .eq('status', true)
+  .ilike('title', `%${query}%`)       // テキスト検索（任意）
+  .contains('works_tags.tag_id', [tagId]) // タグフィルタ（任意）
+  .range(offset, offset + limit - 1)
+  .order('year', { ascending: false })
+```
 
-success Response:
-- data[]
-- meta(page, limit, total, total_pages)
+レスポンス例:
 ```json
 {
   "data": [
@@ -38,98 +33,126 @@ success Response:
       "id": 1,
       "title": "静寂の森",
       "year": 1985,
-      "image_url": "/images/works/1.jpg",
+      "img_url": "https://<project>.supabase.co/storage/v1/object/public/works/1.jpg",
       "tags": [
-        "風景",
-        "油彩"
+        { "tag": { "id": 1, "tag_name": "風景" } },
+        { "tag": { "id": 2, "tag_name": "油彩" } }
       ]
-    },
-    {
-      "id": 2,
-      "title": "夕暮れの港",
-      "year": 1992,
-      "tags": [
-        "水彩",
-        "メキシコ",
-        "作者お気に入り"
-      ],
-      "image_url": "/images/works/2.jpg"
     }
   ],
-  "meta": {
-    "page": 1,
-    "limit": 20,
-    "total": 82,
-    "total_pages": 5
-  }
-}
-```
-### GET /api/works/{id}
-
-用途: 作品詳細取得
-
-Response:
-- id
-- title
-- description
-- year
-- tags[]
-- image_url
----
-#### Error Responses
-
-##### 400 Bad Request
-- page or limit is invalid
-
-##### 500 Internal Server Error
-
-- database error
-
-/api/works?page=-1
-/api/works?limit=1000
-/api/works?page=2&tag="44"
-
-```json
-{
-  "error": "Bad Request",
-  "message": "page must be greater than 0",
-  "code": 400
+  "count": 82
 }
 ```
 
-```json
-{
-  "error": "Bad Request",
-  "message": "limit must be between 1 and 100",
-  "code": 400
-}
+### 作品詳細取得
+
+用途: 作品詳細ページ
+
+```ts
+const { data } = await supabase
+  .from('works')
+  .select('id, title, description, year, img_url, tags:works_tags(tag:tags(id, tag_name))')
+  .eq('id', id)
+  .eq('status', true)
+  .single()
 ```
 
-```json
-{
-  "error": "Bad Request",
-  "message": "tag must be integer",
-  "code": 400
-}
+### 代表作取得
 
+用途: トップページ（3件固定）
+
+```ts
+const { data } = await supabase
+  .from('works')
+  .select('id, title, year, img_url')
+  .eq('status', true)
+  .in('id', representativeIds)
+  .limit(3)
 ```
 
-Response 500
-```json
-{
-  "error": "Internal Server Error",
-  "message": "failed to fetch works",
-  "code": 500
-}
+### タグ一覧取得
+
+```ts
+const { data } = await supabase
+  .from('tags')
+  .select('id, tag_name')
+  .order('id')
 ```
+
 ---
 
-## 管理API
+## 管理者操作
 
-### POST /api/admin/login
+### 認証
 
-### POST /api/admin/works
+Supabase Auth を使用（メール / パスワード）
 
-### PUT /api/admin/works/{id}
+```ts
+// ログイン
+const { data, error } = await supabase.auth.signInWithPassword({
+  email,
+  password,
+})
 
-### DELETE /api/admin/works/{id}
+// ログアウト
+await supabase.auth.signOut()
+```
+
+### 作品登録
+
+```ts
+// 1. 画像を Storage にアップロード
+const { data: file } = await supabase.storage
+  .from('works')
+  .upload(`${fileName}`, imageFile)
+
+// 2. 公開URLを取得
+const { data: { publicUrl } } = supabase.storage
+  .from('works')
+  .getPublicUrl(file.path)
+
+// 3. works テーブルに挿入
+const { data } = await supabase
+  .from('works')
+  .insert({ title, description, year, img_url: publicUrl, status: true })
+  .select()
+  .single()
+```
+
+### 作品更新
+
+```ts
+const { data } = await supabase
+  .from('works')
+  .update({ title, description, year })
+  .eq('id', id)
+  .select()
+  .single()
+```
+
+### 作品削除
+
+```ts
+await supabase.from('works').delete().eq('id', id)
+```
+
+---
+
+## エラーハンドリング
+
+Supabase クライアントはエラーを `error` オブジェクトで返す。
+
+```ts
+const { data, error } = await supabase.from('works').select()
+
+if (error) {
+  // error.message: エラー詳細
+  // error.code: PostgreSQL エラーコード
+  console.error(error.message)
+}
+```
+
+主なエラーケース:
+- データ未検出: `.single()` で該当なしの場合 `PGRST116`
+- 権限エラー: RLS ポリシー違反時 `42501`
+- バリデーション: NOT NULL 違反等 `23502`

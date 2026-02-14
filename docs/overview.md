@@ -16,23 +16,23 @@
 
 
 ## 3. 技術スタック
- - go 1.25
- - Next.js 20.0
- - postgres
- - docker
+ - Next.js (App Router)
+ - TypeScript
+ - Supabase（Database / Auth / Storage）
+ - PostgreSQL（Supabase提供）
+ - デプロイ: Vercel
 
 ## 4. システム構成
- - API フロントエンド分離
- - REST API
- - SPA構成
+ - サーバーレス構成（Supabase BaaS + Vercel）
+ - フロントエンドから Supabase クライアントで直接データ取得
+ - 画像は Supabase Storage で管理
+ - Server Component からのデータ取得を基本とする
 
 ## 5. 認証方針
- JWTで認証を行う。
+ - Supabase Auth を使用
+ - 管理画面のみ認証を行う
+ - メール / パスワード認証
 
-## 6. 認証方針
-- 管理画面のみ行う
-- JWT方式
-
-## 7. 開発方針
+## 6. 開発方針
 - 設計書をdoc/で管理。　md/mmdで管理する。
 - 最小限のサイクルを繰り返して、開発

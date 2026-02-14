@@ -5,7 +5,8 @@
 - Framework: Next.js (App Router)
 - 言語: TypeScript
 - スタイル: CSS / Tailwind（併用）
-- API: Go（外部API）
+- BaaS: Supabase（Database / Auth / Storage）
+- デプロイ: Vercel
 
 ---
 
@@ -14,7 +15,7 @@
 - Server Component を基本とする
 - Client Component は最小限に抑える
 - 「表示」と「動き」を分離する
-- データ取得ロジックはUIから分離する
+- データ取得は Supabase クライアントを通じて行う
 
 ---
 
@@ -29,7 +30,6 @@ app/
 │   ├ [id]/page.tsx # 作品詳細（Server）
 │   ├ loading.tsx
 │   └ error.tsx
-├ globals.css
 
 components/
 ├ works/
@@ -39,11 +39,33 @@ components/
 ├ ui/
 │   └ Button.tsx    # 表示用(Server)
 └ layout/
-    ├ Header.tsx    #表示用(Server)
-    └ Footer.tsx    #表示用(Server)
+    ├ Header.tsx    # 表示用(Server)
+    └ Footer.tsx    # 表示用(Server)
+
+data/
+└ tags.ts           # 共通データ定義
 
 lib/
-└ works.ts          # API通信（Server）
+├ supabase.ts       # Supabase クライアント初期化
+└ works.ts          # データ取得関数（Server）
 
 types/
 └ work.ts           # 型定義
+```
+
+---
+
+## 4. データ取得方針
+
+- Server Component から `lib/supabase.ts` のクライアントを使用してデータ取得
+- クライアントサイドでの直接的なDB操作は行わない
+- 環境変数で Supabase の接続情報を管理
+  - `NEXT_PUBLIC_SUPABASE_URL`
+  - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+
+---
+
+## 5. 画像管理
+
+- 作品画像は Supabase Storage に保存
+- Storage のパブリックバケットを使用し、画像URLを取得

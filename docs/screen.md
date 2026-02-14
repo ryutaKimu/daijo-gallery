@@ -11,16 +11,12 @@
 - 内容:
   - サイト紹介
   - 代表作品(3件)
-- 取得API:
-  - GET /api/works?tag=representative&limit=3
-  - GET /api/works/work_id
+- データ取得:
+  - works テーブルから代表作を取得（3件固定）
 - UI:
   - /代表作遷移ボタン
-    - 取得API:
-      - GET /api/works/work_id
+    - works 詳細データ取得
   - /works遷移ボタン
-    - 取得API:
-      - api/works
   - /artist遷移ボタン
 
 ---
@@ -35,6 +31,9 @@
   - 制作年
   - 検索フォーム
   - ページネーション
+- データ取得:
+  - works テーブルから一覧取得（ページネーション、検索、タグフィルタ対応）
+  - tags テーブルからタグ一覧取得
 
 ---
 
@@ -47,13 +46,12 @@
   - タイトル
   - 制作年
   - prev / next ボタン
-
 - 使用データ:
   - works.id
   - works.title
   - works.description
   - works.year
-  - works.image_url
+  - works.img_url（Supabase Storage）
 
 ---
 
