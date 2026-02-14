@@ -16,6 +16,9 @@ interface WorkListProps {
 const FEATURED_TAG_ID = 1
 /** トップページに表示する代表作の件数 */
 const FEATURED_LIMIT = 3
+/** 画像読み込み中のぼかしプレースホルダー (薄グレー 1x1 pixel) */
+const BLUR_DATA_URL =
+  'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mN8+P9/PQAJkQN/pOHJxAAAAABJRU5ErkJggg=='
 
 type WorkRow = {
   id: number
@@ -78,16 +81,13 @@ async function getWorks({
     return { works: [], totalPages: 0 }
   }
 
-  const works = (data ?? []).map((work) => {
-    const baseUrl = supabase.storage.from('gallery-images').getPublicUrl(work.img_path).data.publicUrl
-    return {
-      id: work.id,
-      title: work.title,
-      year: work.year ?? '',
-      imageUrl: `${baseUrl}?width=600&quality=75`,
-      tags: work.works_tags.map((wt) => wt.tag_id),
-    }
-  })
+  const works = (data ?? []).map((work) => ({
+    id: work.id,
+    title: work.title,
+    year: work.year ?? '',
+    imageUrl: supabase.storage.from('gallery-images').getPublicUrl(work.img_path).data.publicUrl,
+    tags: work.works_tags.map((wt) => wt.tag_id),
+  }))
 
   const total = count ?? 0
   const totalPages = Math.ceil(total / perPage)
@@ -150,6 +150,8 @@ export default async function WorkList({
                   "
                   sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                   priority={index < 3}
+                  placeholder="blur"
+                  blurDataURL={BLUR_DATA_URL}
                 />
               </div>
 
@@ -163,9 +165,13 @@ export default async function WorkList({
           ))}
         </div>
 
-        {/* ページネーションをClient Componentに委譲 */}
-        {!featuredOnly && totalPages > 1 && (
-          <Pagination currentPage={page} totalPages={totalPages} />
+        {/* ページネーション：スペースを常に確保してCLSを防止 */}
+        {!featuredOnly && (
+          <div className="min-h-20">
+            {totalPages > 1 && (
+              <Pagination currentPage={page} totalPages={totalPages} />
+            )}
+          </div>
         )}
       </div>
     </div>
