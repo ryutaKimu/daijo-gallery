@@ -96,6 +96,12 @@ export default async function WorkList({
 
   return (
     <>
+      {works.length === 0 && (
+        <p className="py-20 text-center text-sm text-(--color-main)/60">
+          該当する作品が見つかりませんでした
+        </p>
+      )}
+
       <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
         {works.map((work, index) => (
           <Link

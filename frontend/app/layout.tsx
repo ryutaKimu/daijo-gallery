@@ -32,7 +32,7 @@ export default function RootLayout({
     <html lang="ja">
       <body className={`${notoSerif.variable} ${playfair.variable} antialiased`}>
         <Header />
-        <main>{children}</main>
+        <main className="min-h-dvh">{children}</main>
         <Footer />
       </body>
     </html>

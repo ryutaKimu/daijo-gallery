@@ -38,10 +38,10 @@ export default function Home() {
 
       {/* 代表作品 */}
       <section className="py-12 sm:py-16">
-        <h2 className="text-center text-2xl sm:text-3xl font-medium tracking-wide text-(--color-main)">
+        <h2 className="text-center text-3xl sm:text-4xl font-medium tracking-wide text-(--color-main)">
           代表作品
         </h2>
-        <p className="mt-2 text-center text-sm text-(--color-text)/50">
+        <p className="mt-4 text-center text-1xl text-(--color-accent)">
           生き方が絵に映る。鮮明に、如実に、偽りなく。
         </p>
         <div className="mt-8">
