@@ -3,7 +3,6 @@ import Image from 'next/image'
 import Link from 'next/link'
 import Pagination from '@/components/works/Pagination'
 import { supabase } from '@/lib/superbase'
-import { unstable_cache } from 'next/cache'
 
 interface WorkListProps {
   page?: number
@@ -59,17 +58,16 @@ async function fetchWorks(
 
   const [countResult, dataResult] = await Promise.all([countQuery, dataQuery])
   const { count } = countResult
-  const { data, error } = dataResult as unknown as {
-    data: WorkRow[] | null
-    error: typeof Error | null
-  }
+  const { data, error } = dataResult as { data: WorkRow[] | null; error: Error | null }
 
   if (error) {
-    console.error('Supabase fetch error:', error)
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Supabase fetch error:', error)
+    }
     return { works: [], totalPages: 0 }
   }
 
-  const works = (data ?? []).map((work) => ({
+  const works = (data ?? []).map((work: WorkRow) => ({
     id: work.id,
     title: work.title,
     year: work.year ?? '',
@@ -81,18 +79,13 @@ async function fetchWorks(
   return { works, totalPages: Math.ceil(total / perPage) }
 }
 
-const getWorks = unstable_cache(fetchWorks, ['works-list'], {
-  revalidate: 60,
-  tags: ['works'],
-})
-
 export default async function WorkList({
   page = 1,
   perPage = 6,
   query,
   tagId,
 }: WorkListProps) {
-  const { works, totalPages } = await getWorks(page, perPage, query, tagId)
+  const { works, totalPages } = await fetchWorks(page, perPage, query, tagId)
 
   return (
     <>
