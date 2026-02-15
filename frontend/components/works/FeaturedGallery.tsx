@@ -32,9 +32,15 @@ async function fetchFeaturedWorks(): Promise<Work[]> {
     .eq('status', true)
     .in('id', workIds)
     .order('created_at', { ascending: false })
-    .limit(FEATURED_LIMIT)) as unknown as { data: WorkRow[] | null; error: typeof Error | null }
+    .limit(FEATURED_LIMIT)) as { data: WorkRow[] | null; error: Error | null }
 
-  if (error || !data) return []
+  if (error) {
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Supabase fetch error:', error)
+    }
+    return []
+  }
+  if (!data) return []
 
   return data.map((work) => ({
     id: work.id,
