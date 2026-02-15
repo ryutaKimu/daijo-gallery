@@ -19,7 +19,7 @@ const playfair = Playfair_Display({
 })
 
 export const metadata: Metadata = {
-  title: '山田個展',
+  title: '山田画集',
   description: '70歳画家 山田大乗による芸術作品集',
 }
 
