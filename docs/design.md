@@ -125,3 +125,20 @@
 
 - アニメーション追加検討
 - アクセシビリティ対応
+
+# 命令
+
+Apple のデザインルールがあります。
+
+- https://developer.apple.com/design/human-interface-guidelines
+- https://developer.apple.com/design
+
+- カラーシステム
+- タイポグラフィ
+- 余白・間隔
+- 角丸
+- 影の効果
+- ボタンやカードなどのコンポーネント設計
+- アクセシビリティ配慮
+
+特に、Tailwind CSS での実装を前提として、具体的なクラス名も含めて提案してください。
