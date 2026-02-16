@@ -1,13 +1,12 @@
 import { Work } from '@/types/work'
 import { supabase } from '@/lib/superbase'
+import { BLUR_DATA_URL, STORAGE_BUCKET, FALLBACK_IMAGE } from '@/lib/constants'
 import { unstable_cache } from 'next/cache'
 import Image from 'next/image'
 import Link from 'next/link'
 
 const FEATURED_TAG_ID = 1
 const FEATURED_LIMIT = 3
-const BLUR_DATA_URL =
-  'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mN8+P9/PQAJkQN/pOHJxAAAAABJRU5ErkJggg=='
 
 type WorkRow = {
   id: number
@@ -18,37 +17,48 @@ type WorkRow = {
 }
 
 async function fetchFeaturedWorks(): Promise<Work[]> {
-  const { data: tagRows } = (await supabase
+  // フィーチャータグが付いた作品IDを取得
+  const tagResult = await supabase
     .from('works_tags')
     .select('work_id')
-    .eq('tag_id', FEATURED_TAG_ID)) as { data: { work_id: number }[] | null }
+    .eq('tag_id', FEATURED_TAG_ID)
 
-  const workIds = tagRows?.map((r) => r.work_id) ?? []
+  if (tagResult.error) {
+    console.error('Featured tags fetch error:', tagResult.error)
+    return []
+  }
+
+  const workIds = tagResult.data?.map((r: { work_id: number }) => r.work_id) ?? []
   if (workIds.length === 0) return []
 
-  const { data, error } = (await supabase
+  // 作品データを取得
+  const { data: worksData, error } = await supabase
     .from('works')
     .select('id, title, year, img_path, works_tags(tag_id)')
     .eq('status', true)
     .in('id', workIds)
     .order('created_at', { ascending: false })
-    .limit(FEATURED_LIMIT)) as { data: WorkRow[] | null; error: Error | null }
+    .limit(FEATURED_LIMIT)
 
   if (error) {
-    if (process.env.NODE_ENV === 'development') {
-      console.error('Supabase fetch error:', error)
-    }
+    console.error('Featured works fetch error:', error)
     return []
   }
-  if (!data) return []
+  if (!worksData) return []
 
-  return data.map((work) => ({
-    id: work.id,
-    title: work.title,
-    year: work.year ?? '',
-    imageUrl: supabase.storage.from('gallery-images').getPublicUrl(work.img_path).data.publicUrl,
-    tags: work.works_tags.map((wt) => wt.tag_id),
-  }))
+  // 型安全な変換
+  return worksData.map((work: WorkRow) => {
+    const { data: urlData } = supabase.storage.from(STORAGE_BUCKET).getPublicUrl(work.img_path)
+    const imageUrl = urlData?.publicUrl ?? FALLBACK_IMAGE
+
+    return {
+      id: work.id,
+      title: work.title,
+      year: work.year ?? '',
+      imageUrl,
+      tags: work.works_tags.map((wt: { tag_id: number }) => wt.tag_id),
+    }
+  })
 }
 
 const getFeaturedWorks = unstable_cache(fetchFeaturedWorks, ['featured-works'], {

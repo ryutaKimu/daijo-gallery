@@ -1,10 +1,5 @@
 import Link from 'next/link'
-
-const navLinks = [
-  { href: '/', label: 'トップ' },
-  { href: '/works', label: '作品一覧' },
-  { href: '/artist', label: '作者紹介' },
-]
+import { NAV_LINKS } from '@/lib/constants'
 
 export default function Footer() {
   return (
@@ -21,7 +16,7 @@ export default function Footer() {
           </div>
           <nav>
             <ul className="flex gap-6">
-              {navLinks.map(({ href, label }) => (
+              {NAV_LINKS.map(({ href, label }) => (
                 <li key={href}>
                   <Link
                     href={href}

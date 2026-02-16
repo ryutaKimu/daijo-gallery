@@ -3,6 +3,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import Pagination from '@/components/works/Pagination'
 import { supabase } from '@/lib/superbase'
+import { BLUR_DATA_URL, STORAGE_BUCKET, FALLBACK_IMAGE } from '@/lib/constants'
 
 interface WorkListProps {
   page?: number
@@ -10,9 +11,6 @@ interface WorkListProps {
   query?: string
   tagId?: number
 }
-
-const BLUR_DATA_URL =
-  'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mN8+P9/PQAJkQN/pOHJxAAAAABJRU5ErkJggg=='
 
 type WorkRow = {
   id: number
@@ -22,58 +20,85 @@ type WorkRow = {
   works_tags: { tag_id: number }[]
 }
 
+// クエリにフィルター条件を適用するヘルパー関数
+function applyFilters<T>(query: T, searchText?: string, tagIds?: number[] | null): T {
+  let result = query
+  if (searchText) {
+    // @ts-expect-error - Supabaseクエリビルダーの型
+    result = result.ilike('title', `%${searchText}%`)
+  }
+  if (tagIds !== null && tagIds !== undefined) {
+    // @ts-expect-error - Supabaseクエリビルダーの型
+    result = result.in('id', tagIds)
+  }
+  return result
+}
+
 async function fetchWorks(
   page: number,
   perPage: number,
   query?: string,
   tagId?: number,
 ): Promise<{ works: Work[]; totalPages: number }> {
+  // ページネーションのバリデーション
+  const validPage = Number.isInteger(page) && page > 0 ? page : 1
+
+  // タグフィルター用の作品ID取得
   let tagFilterIds: number[] | null = null
   if (tagId) {
-    const { data: tagRows } = (await supabase
+    const tagResult = await supabase
       .from('works_tags')
       .select('work_id')
-      .eq('tag_id', tagId)) as { data: { work_id: number }[] | null }
-    tagFilterIds = tagRows?.map((r) => r.work_id) ?? []
+      .eq('tag_id', tagId)
+
+    if (tagResult.error) {
+      console.error('Tag filter fetch error:', tagResult.error)
+      return { works: [], totalPages: 0 }
+    }
+    tagFilterIds = tagResult.data?.map((r: { work_id: number }) => r.work_id) ?? []
   }
 
-  const from = (page - 1) * perPage
+  const from = (validPage - 1) * perPage
   const to = from + perPage - 1
 
+  // カウントクエリとデータクエリを構築
   let countQuery = supabase
     .from('works')
     .select('id', { count: 'exact', head: true })
     .eq('status', true)
-  if (query) countQuery = countQuery.ilike('title', `%${query}%`)
-  if (tagFilterIds !== null) countQuery = countQuery.in('id', tagFilterIds)
+  countQuery = applyFilters(countQuery, query, tagFilterIds)
 
   let dataQuery = supabase
     .from('works')
     .select('id, title, year, img_path, works_tags(tag_id)')
     .eq('status', true)
     .order('created_at', { ascending: false })
-  if (query) dataQuery = dataQuery.ilike('title', `%${query}%`)
-  if (tagFilterIds !== null) dataQuery = dataQuery.in('id', tagFilterIds)
+  dataQuery = applyFilters(dataQuery, query, tagFilterIds)
   dataQuery = dataQuery.range(from, to)
 
+  // 並列実行
   const [countResult, dataResult] = await Promise.all([countQuery, dataQuery])
   const { count } = countResult
-  const { data, error } = dataResult as { data: WorkRow[] | null; error: Error | null }
+  const { data: worksData, error } = dataResult
 
   if (error) {
-    if (process.env.NODE_ENV === 'development') {
-      console.error('Supabase fetch error:', error)
-    }
+    console.error('Works fetch error:', error)
     return { works: [], totalPages: 0 }
   }
 
-  const works = (data ?? []).map((work: WorkRow) => ({
-    id: work.id,
-    title: work.title,
-    year: work.year ?? '',
-    imageUrl: supabase.storage.from('gallery-images').getPublicUrl(work.img_path).data.publicUrl,
-    tags: work.works_tags.map((wt) => wt.tag_id),
-  }))
+  // 型安全な変換
+  const works = (worksData ?? []).map((work: WorkRow) => {
+    const { data: urlData } = supabase.storage.from(STORAGE_BUCKET).getPublicUrl(work.img_path)
+    const imageUrl = urlData?.publicUrl ?? FALLBACK_IMAGE
+
+    return {
+      id: work.id,
+      title: work.title,
+      year: work.year ?? '',
+      imageUrl,
+      tags: work.works_tags.map((wt: { tag_id: number }) => wt.tag_id),
+    }
+  })
 
   const total = count ?? 0
   return { works, totalPages: Math.ceil(total / perPage) }

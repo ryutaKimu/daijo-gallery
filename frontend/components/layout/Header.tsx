@@ -1,10 +1,5 @@
 import Link from 'next/link'
-
-const navLinks = [
-  { href: '/', label: 'トップ' },
-  { href: '/works', label: '作品一覧' },
-  { href: '/artist', label: '作者紹介' },
-]
+import { NAV_LINKS } from '@/lib/constants'
 
 export default function Header() {
   return (
@@ -17,7 +12,7 @@ export default function Header() {
           山田 画集
         </Link>
         <ul className="flex items-center gap-6 sm:gap-8">
-          {navLinks.map(({ href, label }) => (
+          {NAV_LINKS.map(({ href, label }) => (
             <li key={href}>
               <Link
                 href={href}
