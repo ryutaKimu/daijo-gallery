@@ -3,6 +3,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import FeaturedGallery from '@/components/works/FeaturedGallery'
 import FeaturedGallerySkeleton from '@/components/works/FeaturedGallerySkeleton'
+import heroImage from '@/public/main.jpg'
 
 export const revalidate = 60
 
@@ -12,12 +13,13 @@ export default function Home() {
       {/* ヒーロー: -mt-14 でヘッダー(h-14)の裏に潜り込み、画面全体を使う */}
       <section className="relative -mt-14 h-dvh w-full overflow-hidden">
         <Image
-          src="/main.png"
+          src={heroImage}
           alt="山田大乗 個展 メインヴィジュアル"
           fill
           className="object-cover"
           sizes="100vw"
           priority
+          placeholder="blur"
         />
         <div className="absolute inset-0 bg-black/25" aria-hidden="true" />
         <div className="absolute inset-0 flex flex-col items-center justify-center px-4 text-center">
