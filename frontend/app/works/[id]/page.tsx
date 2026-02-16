@@ -26,7 +26,7 @@ type WorkDetailRow = {
 }
 
 async function fetchWorkDetail(workId: string): Promise<WorkDetail | null> {
-  const { data: workData, error } = await supabase
+  const { data: workData, error} = (await supabase
     .from('works')
     .select(
       `
@@ -45,7 +45,7 @@ async function fetchWorkDetail(workId: string): Promise<WorkDetail | null> {
     )
     .eq('id', workId)
     .eq('status', true)
-    .single()
+    .single()) as { data: WorkDetailRow | null; error: any }
 
   if (error || !workData) {
     console.error('Work fetch error:', error)
@@ -93,11 +93,15 @@ async function fetchRelatedWorks(
   if (tagIds.length === 0) return []
 
   // 同じタグを持つ作品IDを取得
-  const { data: relatedIds, error: relatedIdsError } = await supabase
+  type WorkTagRow = {
+    work_id: number
+  }
+
+  const { data: relatedIds, error: relatedIdsError } = (await supabase
     .from('works_tags')
     .select('work_id')
     .in('tag_id', tagIds)
-    .neq('work_id', workId)
+    .neq('work_id', workId)) as { data: WorkTagRow[] | null; error: any }
 
   if (relatedIdsError) {
     console.error('Related work IDs fetch error:', relatedIdsError)
@@ -109,13 +113,20 @@ async function fetchRelatedWorks(
   // 重複削除
   const uniqueIds = [...new Set(relatedIds.map((r) => r.work_id))]
 
+  // 型定義
+  type RelatedWorkRow = {
+    id: number
+    title: string
+    img_path: string
+  }
+
   // 作品データを取得
-  const { data: works, error } = await supabase
+  const { data: works, error } = (await supabase
     .from('works')
     .select('id, title, img_path')
     .eq('status', true)
     .in('id', uniqueIds)
-    .limit(4)
+    .limit(4)) as { data: RelatedWorkRow[] | null; error: any }
 
   if (error || !works) return []
 
