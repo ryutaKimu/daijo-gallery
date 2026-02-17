@@ -4,6 +4,7 @@ import Link from 'next/link'
 import Pagination from '@/components/works/Pagination'
 import { supabase } from '@/lib/superbase'
 import { buildImageUrl, getBlurDataUrl } from '@/lib/image-utils'
+import { BLUR_DATA_URL } from '@/lib/constants'
 
 interface WorkListProps {
   page?: number
@@ -139,7 +140,7 @@ export default async function WorkList({
                 sizes="(max-width: 1024px) 50vw, 33vw"
                 priority={index < 3}
                 placeholder="blur"
-                blurDataURL={work.blurDataURL}
+                blurDataURL={work.blurDataURL || BLUR_DATA_URL}
               />
             </div>
             <div className="mt-2">

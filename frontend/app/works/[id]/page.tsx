@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { supabase } from '@/lib/superbase'
 import { WorkDetail, RelatedWork } from '@/types/work'
 import { buildImageUrl, getBlurDataUrl } from '@/lib/image-utils'
+import { BLUR_DATA_URL } from '@/lib/constants'
 import { SupabaseResponse, SupabaseArrayResponse } from '@/lib/supabase-types'
 import type { Metadata } from 'next'
 
@@ -197,7 +198,7 @@ export default async function WorkDetailPage({ params }: PageProps) {
             sizes="(max-width: 1024px) 100vw, 50vw"
             priority
             placeholder="blur"
-            blurDataURL={work.blurDataURL}
+            blurDataURL={work.blurDataURL || BLUR_DATA_URL}
           />
         </div>
 
@@ -272,7 +273,7 @@ export default async function WorkDetailPage({ params }: PageProps) {
                     className="object-cover transition-transform duration-500 ease-out will-change-transform group-hover:scale-105"
                     sizes="(max-width: 1024px) 50vw, 25vw"
                     placeholder="blur"
-                    blurDataURL={related.blurDataURL}
+                    blurDataURL={related.blurDataURL || BLUR_DATA_URL}
                   />
                 </div>
                 <p className="mt-2 text-sm font-medium text-(--color-main) leading-snug line-clamp-2">

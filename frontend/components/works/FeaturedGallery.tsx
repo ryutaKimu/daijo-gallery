@@ -1,6 +1,7 @@
 import { Work } from '@/types/work'
 import { supabase } from '@/lib/superbase'
 import { buildImageUrl, getBlurDataUrl } from '@/lib/image-utils'
+import { BLUR_DATA_URL } from '@/lib/constants'
 import { unstable_cache } from 'next/cache'
 import Image from 'next/image'
 import Link from 'next/link'
@@ -90,7 +91,7 @@ export default async function FeaturedGallery() {
               sizes="(max-width: 640px) 100vw, 33vw"
               priority={index === 0}
               placeholder="blur"
-              blurDataURL={work.blurDataURL}
+              blurDataURL={work.blurDataURL || BLUR_DATA_URL}
             />
             <div
               className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-500"
