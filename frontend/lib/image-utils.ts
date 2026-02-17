@@ -1,7 +1,10 @@
 import { getPlaiceholder } from 'plaiceholder'
 import { STORAGE_BUCKET, BLUR_DATA_URL, FALLBACK_IMAGE } from './constants'
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+if (!supabaseUrl) {
+  throw new Error('環境変数 NEXT_PUBLIC_SUPABASE_URL が設定されていません。');
+}
 
 // 許可するホスト名（Supabaseのホスト名）
 const allowedHostname = new URL(supabaseUrl).hostname
