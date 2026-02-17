@@ -9,6 +9,8 @@
 
 ### 実装改善
 - [implementation-improvements-2025-02-16.md](implementation-improvements-2025-02-16.md) - レビューに基づく改善実装レポート
+- [supabase-type-assertion.md](supabase-type-assertion.md) - Supabase型アサーションの共通化
+- [type-refactoring.md](type-refactoring.md) - ジェネリック型による型定義の共通化（2026-02-17）
 
 ## レビュー観点
 
