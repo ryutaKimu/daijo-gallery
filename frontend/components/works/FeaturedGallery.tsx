@@ -1,6 +1,6 @@
 import { Work } from '@/types/work'
 import { supabase } from '@/lib/superbase'
-import { BLUR_DATA_URL, STORAGE_BUCKET, FALLBACK_IMAGE } from '@/lib/constants'
+import { buildImageUrl, getBlurDataUrl } from '@/lib/image-utils'
 import { unstable_cache } from 'next/cache'
 import Image from 'next/image'
 import Link from 'next/link'
@@ -46,19 +46,22 @@ async function fetchFeaturedWorks(): Promise<Work[]> {
   }
   if (!worksData) return []
 
-  // 型安全な変換
-  return worksData.map((work: WorkRow) => {
-    const { data: urlData } = supabase.storage.from(STORAGE_BUCKET).getPublicUrl(work.img_path)
-    const imageUrl = urlData?.publicUrl ?? FALLBACK_IMAGE
+  // 型安全な変換（Promise.all で並列ブラー生成）
+  return Promise.all(
+    worksData.map(async (work: WorkRow) => {
+      const imageUrl = buildImageUrl(work.img_path)
+      const blurDataURL = await getBlurDataUrl(imageUrl)
 
-    return {
-      id: work.id,
-      title: work.title,
-      year: work.year ?? '',
-      imageUrl,
-      tags: work.works_tags.map((wt: { tag_id: number }) => wt.tag_id),
-    }
-  })
+      return {
+        id: work.id,
+        title: work.title,
+        year: work.year ?? '',
+        imageUrl,
+        blurDataURL,
+        tags: work.works_tags.map((wt: { tag_id: number }) => wt.tag_id),
+      }
+    }),
+  )
 }
 
 const getFeaturedWorks = unstable_cache(fetchFeaturedWorks, ['featured-works'], {
@@ -87,7 +90,7 @@ export default async function FeaturedGallery() {
               sizes="(max-width: 640px) 100vw, 33vw"
               priority={index === 0}
               placeholder="blur"
-              blurDataURL={BLUR_DATA_URL}
+              blurDataURL={work.blurDataURL}
             />
             <div
               className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-500"

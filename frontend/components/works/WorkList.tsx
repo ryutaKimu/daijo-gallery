@@ -3,7 +3,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import Pagination from '@/components/works/Pagination'
 import { supabase } from '@/lib/superbase'
-import { BLUR_DATA_URL, STORAGE_BUCKET, FALLBACK_IMAGE } from '@/lib/constants'
+import { buildImageUrl, getBlurDataUrl } from '@/lib/image-utils'
 
 interface WorkListProps {
   page?: number
@@ -86,19 +86,22 @@ async function fetchWorks(
     return { works: [], totalPages: 0 }
   }
 
-  // 型安全な変換
-  const works = (worksData ?? []).map((work: WorkRow) => {
-    const { data: urlData } = supabase.storage.from(STORAGE_BUCKET).getPublicUrl(work.img_path)
-    const imageUrl = urlData?.publicUrl ?? FALLBACK_IMAGE
+  // 型安全な変換（Promise.all で並列ブラー生成）
+  const works = await Promise.all(
+    (worksData ?? []).map(async (work: WorkRow) => {
+      const imageUrl = buildImageUrl(work.img_path)
+      const blurDataURL = await getBlurDataUrl(imageUrl)
 
-    return {
-      id: work.id,
-      title: work.title,
-      year: work.year ?? '',
-      imageUrl,
-      tags: work.works_tags.map((wt: { tag_id: number }) => wt.tag_id),
-    }
-  })
+      return {
+        id: work.id,
+        title: work.title,
+        year: work.year ?? '',
+        imageUrl,
+        blurDataURL,
+        tags: work.works_tags.map((wt: { tag_id: number }) => wt.tag_id),
+      }
+    }),
+  )
 
   const total = count ?? 0
   return { works, totalPages: Math.ceil(total / perPage) }
@@ -136,7 +139,7 @@ export default async function WorkList({
                 sizes="(max-width: 1024px) 50vw, 33vw"
                 priority={index < 3}
                 placeholder="blur"
-                blurDataURL={BLUR_DATA_URL}
+                blurDataURL={work.blurDataURL}
               />
             </div>
             <div className="mt-2">

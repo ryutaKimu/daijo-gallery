@@ -4,7 +4,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { supabase } from '@/lib/superbase'
 import { WorkDetail, RelatedWork } from '@/types/work'
-import { BLUR_DATA_URL, STORAGE_BUCKET, FALLBACK_IMAGE } from '@/lib/constants'
+import { buildImageUrl, getBlurDataUrl } from '@/lib/image-utils'
 import { SupabaseResponse, SupabaseArrayResponse } from '@/lib/supabase-types'
 import type { Metadata } from 'next'
 
@@ -53,11 +53,9 @@ async function fetchWorkDetail(workId: string): Promise<WorkDetail | null> {
     return null
   }
 
-  // 画像URLの構築
-  const { data: urlData } = supabase.storage
-    .from(STORAGE_BUCKET)
-    .getPublicUrl(workData.img_path)
-  const imageUrl = urlData?.publicUrl ?? FALLBACK_IMAGE
+  // 画像URLの構築とブラー生成
+  const imageUrl = buildImageUrl(workData.img_path)
+  const blurDataURL = await getBlurDataUrl(imageUrl)
 
   // タグの変換
   const tags = workData.works_tags.map((wt) => ({
@@ -71,6 +69,7 @@ async function fetchWorkDetail(workId: string): Promise<WorkDetail | null> {
     description: workData.description,
     year: workData.year ?? '',
     imageUrl,
+    blurDataURL,
     tags,
   }
 }
@@ -93,7 +92,7 @@ async function fetchRelatedWorks(
 ): Promise<RelatedWork[]> {
   if (tagIds.length === 0) return []
 
-  // 同じタグを持つ作品IDを取得
+  // 同じタグを持つ作品IDを取得（上限20件でメモリ削減）
   type WorkTagRow = {
     work_id: number
   }
@@ -102,7 +101,8 @@ async function fetchRelatedWorks(
     .from('works_tags')
     .select('work_id')
     .in('tag_id', tagIds)
-    .neq('work_id', workId)) as SupabaseArrayResponse<WorkTagRow>
+    .neq('work_id', workId)
+    .limit(20)) as SupabaseArrayResponse<WorkTagRow>
 
   if (relatedIdsError) {
     console.error('Related work IDs fetch error:', relatedIdsError)
@@ -111,8 +111,8 @@ async function fetchRelatedWorks(
 
   if (!relatedIds || relatedIds.length === 0) return []
 
-  // 重複削除
-  const uniqueIds = [...new Set(relatedIds.map((r) => r.work_id))]
+  // SQL の IN 句は重複値を自動無視するため JS 側の Set 除算は不要
+  const ids = relatedIds.map((r) => r.work_id)
 
   // 型定義
   type RelatedWorkRow = {
@@ -126,22 +126,25 @@ async function fetchRelatedWorks(
     .from('works')
     .select('id, title, img_path')
     .eq('status', true)
-    .in('id', uniqueIds)
+    .in('id', ids)
     .limit(4)) as SupabaseArrayResponse<RelatedWorkRow>
 
   if (error || !works) return []
 
-  return works.map((work) => {
-    const { data: urlData } = supabase.storage
-      .from(STORAGE_BUCKET)
-      .getPublicUrl(work.img_path)
+  // Promise.all で並列ブラー生成
+  return Promise.all(
+    works.map(async (work) => {
+      const imageUrl = buildImageUrl(work.img_path)
+      const blurDataURL = await getBlurDataUrl(imageUrl)
 
-    return {
-      id: work.id,
-      title: work.title,
-      imageUrl: urlData?.publicUrl ?? FALLBACK_IMAGE,
-    }
-  })
+      return {
+        id: work.id,
+        title: work.title,
+        imageUrl,
+        blurDataURL,
+      }
+    }),
+  )
 }
 
 function getCachedRelatedWorks(workId: number, tagIds: number[]) {
@@ -194,7 +197,7 @@ export default async function WorkDetailPage({ params }: PageProps) {
             sizes="(max-width: 1024px) 100vw, 50vw"
             priority
             placeholder="blur"
-            blurDataURL={BLUR_DATA_URL}
+            blurDataURL={work.blurDataURL}
           />
         </div>
 
@@ -269,7 +272,7 @@ export default async function WorkDetailPage({ params }: PageProps) {
                     className="object-cover transition-transform duration-500 ease-out will-change-transform group-hover:scale-105"
                     sizes="(max-width: 1024px) 50vw, 25vw"
                     placeholder="blur"
-                    blurDataURL={BLUR_DATA_URL}
+                    blurDataURL={related.blurDataURL}
                   />
                 </div>
                 <p className="mt-2 text-sm font-medium text-(--color-main) leading-snug line-clamp-2">

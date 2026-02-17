@@ -8,6 +8,7 @@ export type Work = {
   title: string
   year: string
   imageUrl: string
+  blurDataURL: string
   tags?: number[]
 }
 
@@ -17,6 +18,7 @@ export type WorkDetail = {
   description: string | null
   year: string
   imageUrl: string
+  blurDataURL: string
   tags: Tag[]
 }
 
@@ -31,4 +33,5 @@ export type RelatedWork = {
   id: number
   title: string
   imageUrl: string
+  blurDataURL: string
 }
