@@ -41,8 +41,9 @@ async function fetchWorks(
   query?: string,
   tagId?: number,
 ): Promise<{ works: Work[]; totalPages: number }> {
-  // ページネーションのバリデーション
-  const validPage = Number.isInteger(page) && page > 0 ? page : 1
+  // ページネーションのバリデーション（上限を設けて過大なOFFSETを防止）
+  const MAX_PAGE = 1000
+  const validPage = Number.isInteger(page) && page > 0 && page <= MAX_PAGE ? page : 1
 
   // タグフィルター用の作品ID取得
   let tagFilterIds: number[] | null = null

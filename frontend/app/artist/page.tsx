@@ -16,7 +16,7 @@ export default function Artist() {
           {/* ポートレート */}
           <div className="relative aspect-4/5 overflow-hidden bg-(--color-sub)">
             <Image
-              src="https://picsum.photos/800/1000?random=50"
+              src="/main.jpg"
               alt="山田 大乗 肖像"
               fill
               className="object-cover"
