@@ -13,20 +13,6 @@ interface PageProps {
   params: Promise<{ id: string }>
 }
 
-type WorkDetailRow = {
-  id: number
-  title: string
-  description: string | null
-  year: number | null
-  img_path: string
-  works_tags: {
-    tags: {
-      id: number
-      tag_name: string
-    }
-  }[]
-}
-
 async function fetchWorkDetail(workId: string): Promise<WorkDetail | null> {
 
   // URLパラメータworkIdは文字列なので数値型に変換
