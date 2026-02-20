@@ -47,7 +47,7 @@ async function fetchWorkDetail(workId: string): Promise<WorkDetail | null> {
     )
     .eq('id', workId)
     .eq('status', true)
-    .single()) as SupabaseResponse<WorkDetailRow>
+    .single())
 
   if (error || !workData) {
     console.error('Work fetch error:', error)
