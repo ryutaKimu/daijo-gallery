@@ -6,7 +6,7 @@ export type Tag = {
 export type Work = {
   id: number
   title: string
-  year: string
+  year: number | null
   imageUrl: string
   blurDataURL: string
   tags?: number[]
@@ -16,7 +16,7 @@ export type WorkDetail = {
   id: number
   title: string
   description: string | null
-  year: string
+  year: number | null
   imageUrl: string
   blurDataURL: string
   tags: Tag[]
