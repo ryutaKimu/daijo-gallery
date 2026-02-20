@@ -12,7 +12,8 @@ export default async function Works({
 }) {
   const params = await searchParams
   const page = Number(params.page) || 1
-  const query = typeof params.q === 'string' ? params.q : undefined
+  const rawQuery = typeof params.q === 'string' ? params.q.slice(0, 200) : ''
+  const query = rawQuery || undefined
   const tagId = Number(params.tag) || undefined
 
   return (
